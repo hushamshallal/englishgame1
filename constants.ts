@@ -14,8 +14,8 @@ export const TIME_PENALTY_INCORRECT = -2;
 
 export const ROUND_REQUIREMENTS: Record<Difficulty, number> = {
   easy: 6,
-  medium: 8,
-  hard: 10,
+  medium: 6,
+  hard: 6,
 };
 
 export const TOTAL_ROUNDS_PER_LEVEL = 3;

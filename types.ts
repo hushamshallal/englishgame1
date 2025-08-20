@@ -1,8 +1,34 @@
-
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type GameMode = 'time' | 'training' | 'category';
 
-export const CATEGORIES = ['jobs', 'animals', 'tech', 'transport', 'places', 'family', 'verbs', 'education', 'food', 'internet', 'general', 'life'] as const;
+export const CATEGORIES = [
+    'colors', 
+    'numbers', 
+    'week_days', 
+    'months_seasons', 
+    'family', 
+    'body_parts', 
+    'clothes', 
+    'food_drink', 
+    'animals', 
+    'school_supplies', 
+    'home_furniture', 
+    'jobs', 
+    'city_places', 
+    'transport', 
+    'weather', 
+    'basic_verbs', 
+    'adjectives', 
+    'pronouns', 
+    'prepositions', 
+    'tools', 
+    'sports_hobbies', 
+    'tech_internet', 
+    'nature', 
+    'holidays_occasions', 
+    'emotions_feelings'
+] as const;
+
 export type Category = typeof CATEGORIES[number];
 
 export type WordItem = {
@@ -33,7 +59,9 @@ export interface SessionStats {
     mode: GameMode;
     score: number;
     matches: number;
+    incorrectAttempts?: number;
     level?: Difficulty;
     round?: number;
     timeTaken?: number;
+    win?: boolean;
 }
