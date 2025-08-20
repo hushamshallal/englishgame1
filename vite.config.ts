@@ -1,14 +1,17 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'url'
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      // هذا السطر يضبط المسار '@' ليشير إلى مجلد 'src'
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    }
-  }
-})
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, '.', '');
+    return {
+      define: {
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, '.'),
+        }
+      }
+    };
+});

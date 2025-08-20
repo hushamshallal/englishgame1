@@ -1,5 +1,5 @@
 {
-  "name": "تحدي المطابقة",
-  "description": "أتقن مفردات جديدة واختبر سرعتك في لعبة مطابقة الكلمات الممتعة. تتميز بأوضاع لعب متعددة: تحدي الوقت، وضع التدريب، واللعب حسب الفئة مع بنك كلمات ضخم ومصنف.",
+  "name": "English Match Pro",
+  "description": "A bilingual (Arabic/English) word matching game to help users learn English vocabulary. The game features three modes: Time Challenge, Training, and Category-based play, with a scoring system and persistent stats.",
   "requestFramePermissions": []
 }

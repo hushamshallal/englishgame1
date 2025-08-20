@@ -1,37 +1,24 @@
-import { Difficulty } from './types.ts';
+import { Difficulty } from './types';
 
-interface GameConfig {
-  timer: number;
-  wordsOnScreen: number;
-  matchesPerRound: number;
-  pointsPerMatch: number;
-}
+export const POINTS: Record<Difficulty, number> = {
+  easy: 10,
+  medium: 15,
+  hard: 20,
+};
 
-export const GAME_CONFIG: Record<Difficulty, GameConfig> = {
-  [Difficulty.EASY]: {
-    timer: 90,
-    wordsOnScreen: 4,
-    matchesPerRound: 8,
-    pointsPerMatch: 10,
-  },
-  [Difficulty.MEDIUM]: {
-    timer: 90,
-    wordsOnScreen: 5,
-    matchesPerRound: 12,
-    pointsPerMatch: 15,
-  },
-  [Difficulty.HARD]: {
-    timer: 120,
-    wordsOnScreen: 6,
-    matchesPerRound: 16,
-    pointsPerMatch: 20,
-  },
+export const MISTAKE_PENALTY = -10;
+
+export const TIME_CHALLENGE_SECONDS = 90;
+export const TIME_BONUS_CORRECT = 1;
+export const TIME_PENALTY_INCORRECT = -2;
+
+export const ROUND_REQUIREMENTS: Record<Difficulty, number> = {
+  easy: 6,
+  medium: 8,
+  hard: 10,
 };
 
 export const TOTAL_ROUNDS_PER_LEVEL = 3;
 
-export const DIFFICULTY_NAMES_AR: Record<Difficulty, string> = {
-  [Difficulty.EASY]: 'سهل',
-  [Difficulty.MEDIUM]: 'متوسط',
-  [Difficulty.HARD]: 'صعب',
-};
+export const STREAK_BONUS_THRESHOLD = 3;
+export const STREAK_BONUS_POINTS = 10;
