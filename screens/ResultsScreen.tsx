@@ -8,11 +8,17 @@ interface ResultsScreenProps {
 }
 
 const ResultsScreen: React.FC<ResultsScreenProps> = ({ stats, onRestart, onHome }) => {
-  const { mode, score, matches, incorrectAttempts, level, round, win } = stats;
+  const { mode, score, matches, incorrectAttempts, level, round, win, grammarLevel, listeningLevel } = stats;
 
   const getTitle = () => {
     if (mode === 'time') {
         return win ? "تهانينا، لقد فزت!" : "انتهى الوقت!";
+    }
+    if (mode === 'grammar') {
+        return "انتهى اختبار القواعد!";
+    }
+    if (mode === 'listening') {
+        return "انتهى اختبار الاستماع!";
     }
     return "نتائج الجلسة";
   }
@@ -21,11 +27,17 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ stats, onRestart, onHome 
     if (mode === 'time' && win) {
         return "لقد أكملت تحدي الوقت بنجاح. عمل رائع!";
     }
+    if (mode === 'grammar') {
+        return "أحسنت! هذه هي نتائجك في اختبار القواعد.";
+    }
+    if (mode === 'listening') {
+        return "أحسنت! هذه هي نتائجك في اختبار الاستماع.";
+    }
     return "هذه هي نتائجك في هذه الجلسة.";
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-center">
+    <div className="flex flex-col items-center justify-center h-full text-center">
       <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <h1 className="text-4xl font-extrabold mb-4 text-sky-600 dark:text-sky-400">{getTitle()}</h1>
         <p className="text-slate-600 dark:text-slate-400 mb-8">{getMessage()}</p>
@@ -36,7 +48,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ stats, onRestart, onHome 
                 <p className="text-3xl font-bold text-green-500">{score}</p>
             </div>
             <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg">
-                <p className="text-sm text-slate-500">المطابقات</p>
+                <p className="text-sm text-slate-500">{mode === 'grammar' || mode === 'listening' ? 'إجابات صحيحة' : 'المطابقات'}</p>
                 <p className="text-3xl font-bold text-blue-500">{matches}</p>
             </div>
             {incorrectAttempts !== undefined && (
@@ -49,6 +61,18 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ stats, onRestart, onHome 
                  <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg">
                     <p className="text-sm text-slate-500">المستوى</p>
                     <p className="text-3xl font-bold text-yellow-500">{level}</p>
+                </div>
+            )}
+             {grammarLevel && (
+                 <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg">
+                    <p className="text-sm text-slate-500">أعلى مستوى</p>
+                    <p className="text-3xl font-bold text-yellow-500">{grammarLevel}</p>
+                </div>
+            )}
+            {listeningLevel && (
+                 <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg">
+                    <p className="text-sm text-slate-500">أعلى مستوى</p>
+                    <p className="text-3xl font-bold text-yellow-500">{listeningLevel}</p>
                 </div>
             )}
             {round && (

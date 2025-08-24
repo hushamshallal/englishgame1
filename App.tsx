@@ -5,6 +5,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { StatsProvider } from './context/StatsContext';
 import HomeScreen from './screens/HomeScreen';
 import GameScreen from './screens/GameScreen';
+import GrammarGameScreen from './screens/GrammarGameScreen';
+import ListeningGameScreen from './screens/ListeningGameScreen';
 import ResultsScreen from './screens/ResultsScreen';
 
 type Screen = 'home' | 'game' | 'results';
@@ -43,6 +45,12 @@ const App: React.FC = () => {
   const renderScreen = () => {
     switch (screen) {
       case 'game':
+        if (gameOptions?.mode === 'grammar') {
+            return <GrammarGameScreen options={gameOptions} onGameEnd={showResults} onExit={goHome} />;
+        }
+        if (gameOptions?.mode === 'listening') {
+            return <ListeningGameScreen options={gameOptions} onGameEnd={showResults} onExit={goHome} />;
+        }
         return gameOptions && <GameScreen options={gameOptions} onGameEnd={showResults} onExit={goHome} />;
       case 'results':
         return lastSessionStats && <ResultsScreen stats={lastSessionStats} onRestart={restartGame} onHome={goHome} />;
@@ -55,10 +63,10 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <StatsProvider>
-        <div className="min-h-screen w-full font-sans transition-colors duration-300">
-          <div className="container mx-auto p-4 max-w-4xl">
+        <div className="min-h-screen w-full font-sans transition-colors duration-300 flex flex-col">
+          <main className="container mx-auto p-4 max-w-4xl flex-grow">
             {renderScreen()}
-          </div>
+          </main>
         </div>
       </StatsProvider>
     </ThemeProvider>

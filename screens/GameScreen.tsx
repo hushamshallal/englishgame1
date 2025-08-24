@@ -328,7 +328,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ options, onGameEnd, onExit }) =
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)]">
+    <div className="flex flex-col h-full">
         {showExitConfirm && <ExitConfirmationModal />}
         <header className="flex justify-between items-center mb-2 md:mb-4">
             <h2 className="text-xl md:text-2xl font-bold">{

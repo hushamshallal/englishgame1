@@ -1,5 +1,5 @@
 export type Difficulty = 'easy' | 'medium' | 'hard';
-export type GameMode = 'time' | 'training' | 'category';
+export type GameMode = 'time' | 'training' | 'category' | 'grammar' | 'listening';
 
 export const CATEGORIES = [
     'colors', 
@@ -26,7 +26,8 @@ export const CATEGORIES = [
     'tech_internet', 
     'nature', 
     'holidays_occasions', 
-    'emotions_feelings'
+    'emotions_feelings',
+    'travel'
 ] as const;
 
 export type Category = typeof CATEGORIES[number];
@@ -43,6 +44,7 @@ export interface GameOptions {
     mode: GameMode;
     difficulty?: Difficulty;
     category?: Category;
+    subMode?: 'timed' | 'lives';
 }
 
 export interface CardState {
@@ -64,4 +66,35 @@ export interface SessionStats {
     round?: number;
     timeTaken?: number;
     win?: boolean;
+    grammarLevel?: number;
+    listeningLevel?: number;
+}
+
+export interface GrammarQuestion {
+    sentence_with_blank: string;
+    options: string[];
+    correct_answer: string;
+    explanation_ar: string;
+    grammar_topic: string; // e.g., "Present Simple", "Passive Voice"
+}
+
+export interface GrammarStats {
+  totalPoints: number;
+  totalCorrect: number;
+  totalIncorrect: number;
+  topicStats: Record<string, { correct: number; incorrect: number }>;
+}
+
+export interface ListeningQuestion {
+    id: string;
+    level: number;
+    correct_answer: string;
+    options: string[];
+    pronunciation_hint_ar?: string;
+}
+
+export interface ListeningStats {
+  totalPoints: number;
+  totalCorrect: number;
+  totalIncorrect: number;
 }

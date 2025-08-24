@@ -1,5 +1,5 @@
 {
-  "name": "English Match Pro",
-  "description": "A bilingual (Arabic/English) word matching game to help users learn English vocabulary. The game features three modes: Time Challenge, Training, and Category-based play, with a scoring system and persistent stats.",
+  "name": "WordUp",
+  "description": "An interactive bilingual (Arabic/English) game to master English vocabulary, grammar, and listening skills. Features multiple game modes and tracks your progress.",
   "requestFramePermissions": []
 }
