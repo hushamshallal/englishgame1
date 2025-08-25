@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SessionStats } from '../types';
 
@@ -25,7 +26,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ stats, onRestart, onHome 
 
   const getMessage = () => {
     if (mode === 'time' && win) {
-        return "لقد أكملت تحدي الوقت بنجاح. عمل رائع!";
+        return "لقد أكملت تحدي المطابقة بنجاح. عمل رائع!";
     }
     if (mode === 'grammar') {
         return "أحسنت! هذه هي نتائجك في اختبار القواعد.";

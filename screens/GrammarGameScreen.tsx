@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GameOptions, GrammarQuestion, SessionStats } from '../types';
 import { useStats } from '../context/StatsContext';
@@ -7,17 +8,33 @@ import { GRAMMAR_QUESTIONS } from '../data/grammar';
 
 const shuffleArray = <T,>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
-const LevelTransitionScreen = ({ level }: { level: number }) => (
-    <div className="flex flex-col items-center justify-center h-full w-full bg-slate-100 dark:bg-slate-900">
-        <div className="text-center p-8 rounded-lg bg-white dark:bg-slate-800 shadow-xl animate-fade-in-up">
-            <StarIcon className="w-20 h-20 text-yellow-400 mx-auto mb-4" />
-            <h2 className="text-4xl font-bold mb-4 text-sky-500 dark:text-sky-400">
-                أحسنت! لقد وصلت للمستوى {level}!
+const LevelTransitionScreen: React.FC<{ title: string; message: string; }> = ({ title, message }) => (
+    <div className="fixed inset-0 bg-slate-900/70 dark:bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50 animate-fade-in p-4">
+        <div className="bg-slate-800/30 dark:bg-black/40 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center animate-scale-in-bounce">
+            <div>
+                <StarIcon 
+                    className="w-24 h-24 sm:w-28 sm:h-28 text-amber-400 mx-auto animate-star-pulse" 
+                    style={{filter: 'drop-shadow(0 0 15px rgba(251, 191, 36, 0.7))'}} 
+                />
+            </div>
+            <h2 
+                className="text-3xl sm:text-4xl font-bold mt-6 mb-2 text-white animate-fade-in-up opacity-0"
+                style={{ animationDelay: '0.3s' }}
+            >
+                {title}
             </h2>
-            <p className="text-xl mt-2 text-slate-600 dark:text-slate-400">
-                استعد لتحدٍ جديد...
+            <p 
+                className="text-lg sm:text-xl mt-2 text-slate-200 animate-fade-in-up opacity-0"
+                style={{ animationDelay: '0.6s' }}
+            >
+                {message}
             </p>
-            <div className="mt-8 w-16 h-16 border-4 border-t-sky-500 border-slate-200 dark:border-slate-600 rounded-full animate-spin mx-auto"></div>
+            <div 
+                className="mt-8 w-full bg-white/20 rounded-full h-3.5 overflow-hidden animate-fade-in opacity-0"
+                style={{ animationDelay: '0.8s' }}
+            >
+                <div className="bg-gradient-to-r from-amber-400 to-yellow-500 h-full rounded-full animate-progress-fill"></div>
+            </div>
         </div>
     </div>
 );
@@ -49,7 +66,6 @@ const GrammarGameScreen: React.FC<GrammarGameScreenProps> = ({ options, onGameEn
     const [lives, setLives] = useState(GRAMMAR_INITIAL_LIVES);
     const [timeLeft, setTimeLeft] = useState(GRAMMAR_TIMER_SECONDS);
     
-    // Initialize question pool and indices
     useEffect(() => {
         const shuffledPool: Record<number, GrammarQuestion[]> = {};
         const initialIndices: Record<number, number> = {};
@@ -186,7 +202,7 @@ const GrammarGameScreen: React.FC<GrammarGameScreenProps> = ({ options, onGameEn
         </div>
     );
     
-    if (isLevelTransitioning) return <LevelTransitionScreen level={level + 1} />;
+    if (isLevelTransitioning) return <LevelTransitionScreen title={`وصلت للمستوى ${level + 1}!`} message="استعد لتحدٍ جديد..." />;
     
     return (
         <div className="flex flex-col h-full">
