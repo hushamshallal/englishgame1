@@ -173,13 +173,8 @@ const AboutModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => (
               <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">المطور</h4>
               <p>تم تطوير هذه اللعبة بالكامل بواسطة: <span className="font-bold text-green-500">هشام محسن</span>.</p>
                <p className="mt-4 bg-slate-100 dark:bg-slate-700 p-4 rounded-lg">
-                  <span className="font-bold">ادعمنا لنستمر!</span><br/>
-                  لم نضع إعلانات لتقديم تجربة تعليمية صافية. لدعم استمرارية وتطوير WordUp، يمكنكم المساهمة عبر:<br/>
-                  - <span className="font-semibold text-sky-500">زين كاش:</span> <code className="font-mono">07714811082</code><br/>
-                  - <span className="font-semibold text-sky-500">حساب ماستر كارد:</span> <code className="font-mono">7115028610</code><br/>
-                  - <span className="font-semibold text-sky-500">للمشاركة بالتطوير والأفكار، تواصل معنا عبر تليجرام:</span> <a href="https://t.me/C3hem" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">@C3hem</a>
+                  <span className="font-semibold text-sky-500">للمشاركة بالتطوير والأفكار، تواصل معنا عبر تليجرام:</span> <a href="https://t.me/C3hem" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">@C3hem</a>
               </p>
-              <p className="mt-4 text-center text-sm text-slate-500">ربي يحفظكم ويوفقكم</p>
             </div>
           </div>
         </div>
