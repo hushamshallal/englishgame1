@@ -5,6 +5,7 @@ import { useStats } from '../context/StatsContext';
 import { LISTENING_POINTS_CORRECT, LISTENING_POINTS_INCORRECT, LISTENING_LEVEL_UP_THRESHOLD, LISTENING_INITIAL_LIVES } from '../constants';
 import { SpeakerWaveIcon, StarIcon, LightBulbIcon, HeartIcon } from '@heroicons/react/24/solid';
 import { LISTENING_QUESTIONS_DATA } from '../data/listeningWords';
+import InstructionsModal from '../components/InstructionsModal';
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const newArray = [...array];
@@ -55,6 +56,7 @@ interface ListeningGameScreenProps {
 const ListeningGameScreen: React.FC<ListeningGameScreenProps> = ({ options, onGameEnd, onExit }) => {
     const { addListeningSessionStats } = useStats();
 
+    const [showInstructions, setShowInstructions] = useState(true);
     const [questionPool, setQuestionPool] = useState<Record<number, ListeningQuestion[]>>({});
     const [questionIndices, setQuestionIndices] = useState<Record<number, number>>({});
     const [isLevelTransitioning, setIsLevelTransitioning] = useState(false);
@@ -189,11 +191,29 @@ const ListeningGameScreen: React.FC<ListeningGameScreenProps> = ({ options, onGa
     }, [question]);
 
     useEffect(() => {
-        if (question && !isAnswered) {
+        if (question && !isAnswered && !showInstructions) {
            const timer = setTimeout(() => handlePlaySound(), 500);
            return () => clearTimeout(timer);
         }
-    }, [question, isAnswered, handlePlaySound]);
+    }, [question, isAnswered, handlePlaySound, showInstructions]);
+
+    const instructions = [
+        'استمع جيداً للكلمة التي يتم نطقها.',
+        'اختر الإملاء الصحيح للكلمة التي سمعتها من بين الخيارات.',
+        'لديك 5 حيوات. كل إجابة خاطئة تفقدك حياة واحدة.',
+        'أجب على 5 أسئلة صحيحة للارتقاء إلى المستوى التالي وزيادة صعوبة الكلمات.',
+    ];
+
+    if (showInstructions) {
+        return (
+            <InstructionsModal
+                title="تعليمات اختبار الاستماع"
+                instructions={instructions}
+                onStart={() => setShowInstructions(false)}
+                gameIcon={<SpeakerWaveIcon className="w-10 h-10 text-sky-500" />}
+            />
+        );
+    }
 
     const renderHeader = () => (
         <div className="grid grid-cols-3 items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg mb-6 w-full gap-4">

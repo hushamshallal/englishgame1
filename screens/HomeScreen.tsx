@@ -1,13 +1,15 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useStats } from '../context/StatsContext';
 import { useTheme } from '../context/ThemeContext';
-import { GameOptions, Category, CATEGORIES } from '../types';
-import { SunIcon, MoonIcon, PuzzlePieceIcon, ClockIcon, HeartIcon, ChartBarIcon as ChartBarIconSolid, LightBulbIcon, SpeakerWaveIcon, ChatBubbleBottomCenterTextIcon, AcademicCapIcon, QueueListIcon, HomeIcon as HomeIconSolid } from '@heroicons/react/24/solid';
+import { useUser } from '../context/UserContext';
+import { GameOptions, Category, CATEGORIES, CefrResult, QuestionType } from '../types';
+import { SunIcon, MoonIcon, PuzzlePieceIcon, ClockIcon, HeartIcon, ChartBarIcon as ChartBarIconSolid, LightBulbIcon, SpeakerWaveIcon, ChatBubbleBottomCenterTextIcon, AcademicCapIcon, QueueListIcon, HomeIcon as HomeIconSolid, BeakerIcon, ArrowUpOnSquareIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 import { HomeIcon as HomeIconOutline, ChartBarIcon as ChartBarIconOutline } from '@heroicons/react/24/outline';
+import { VOCAB_ESTIMATES } from '../data/cefr';
 
 // --- Extracted Components ---
 
+// ... (CategoryPicker, GrammarOptionsModal, and AboutModal remain the same) ...
 const CategoryPicker: React.FC<{ onChoice: (category: Category) => void; onClose: () => void; }> = ({ onChoice, onClose }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md text-center">
@@ -54,105 +56,6 @@ const GrammarOptionsModal: React.FC<{ onStartGame: (options: GameOptions) => voi
     </div>
 );
 
-const GrammarStatsDetailsModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => {
-    const { grammarStats } = useStats();
-    const { totalCorrect, totalIncorrect, topicStats } = grammarStats;
-    const totalAnswered = totalCorrect + totalIncorrect;
-    const overallSuccessRate = totalAnswered > 0 ? ((totalCorrect / totalAnswered) * 100).toFixed(0) : 0;
-
-    const topicsForImprovement = useMemo(() => {
-        return Object.entries(topicStats)
-            .map(([topic, stats]) => {
-                const total = stats.correct + stats.incorrect;
-                const successRate = total > 0 ? (stats.correct / total) * 100 : 0;
-                return { topic, successRate, total, ...stats };
-            })
-            .filter(t => t.total > 0)
-            .sort((a, b) => a.successRate - b.successRate || b.incorrect - a.incorrect)
-            .slice(0, 5);
-    }, [topicStats]);
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
-                <h3 className="text-2xl font-bold mb-2 text-center flex items-center justify-center">
-                    <ChartBarIconSolid className="w-7 h-7 ml-2 text-sky-500" />
-                    إحصائيات القواعد
-                </h3>
-                <div className="grid grid-cols-3 gap-3 text-center my-6">
-                    <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-green-500">{overallSuccessRate}%</p></div>
-                    <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات صحيحة</p><p className="text-2xl font-bold text-blue-500">{totalCorrect}</p></div>
-                    <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات خاطئة</p><p className="text-2xl font-bold text-red-500">{totalIncorrect}</p></div>
-                </div>
-                {topicsForImprovement.length > 0 && (
-                    <div>
-                        <h4 className="font-bold text-lg mb-4 text-center flex items-center justify-center"><LightBulbIcon className="w-6 h-6 ml-2 text-yellow-400" />أكثر المواضيع التي تحتاج للتركيز</h4>
-                        <ul className="space-y-4 text-right">
-                            {topicsForImprovement.map(({ topic, correct, total, successRate }) => (
-                                <li key={topic} className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="font-semibold text-slate-700 dark:text-slate-300">{topic}</span>
-                                        <span className="text-sm font-mono text-slate-500 dark:text-slate-400">{correct}/{total} ({successRate.toFixed(0)}%)</span>
-                                    </div>
-                                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
-                                        <div 
-                                          className={`h-2 rounded-full transition-all duration-500 ${successRate > 70 ? 'bg-green-500' : successRate > 40 ? 'bg-yellow-500' : 'bg-red-500'}`} 
-                                          style={{ width: `${successRate}%` }}
-                                        ></div>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-                <button onClick={onClose} className="mt-6 w-full bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 font-semibold py-2 px-6 rounded-lg transition-all">إغلاق</button>
-            </div>
-        </div>
-    );
-};
-
-const ListeningStatsDetailsModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => {
-    const { listeningStats } = useStats();
-    const { totalCorrect, totalIncorrect } = listeningStats;
-    const totalAnswered = totalCorrect + totalIncorrect;
-    const successRate = totalAnswered > 0 ? ((totalCorrect / totalAnswered) * 100).toFixed(0) : 0;
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
-                <h3 className="text-2xl font-bold mb-2 text-center flex items-center justify-center"><ChartBarIconSolid className="w-7 h-7 ml-2 text-teal-500" />إحصائيات الاستماع</h3>
-                <div className="grid grid-cols-3 gap-3 text-center my-6">
-                    <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-green-500">{successRate}%</p></div>
-                    <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات صحيحة</p><p className="text-2xl font-bold text-blue-500">{totalCorrect}</p></div>
-                    <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات خاطئة</p><p className="text-2xl font-bold text-red-500">{totalIncorrect}</p></div>
-                </div>
-                <button onClick={onClose} className="mt-6 w-full bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 font-semibold py-2 px-6 rounded-lg transition-all">إغلاق</button>
-            </div>
-        </div>
-    );
-};
-
-const DetailsModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => {
-    const { totalPoints, totalMatches, totalIncorrectAttempts, totalSessionsPlayed } = useStats();
-    const wordMatchSuccessRate = totalMatches > 0 || totalIncorrectAttempts > 0 ? ((totalMatches / (totalMatches + totalIncorrectAttempts)) * 100).toFixed(0) : 100;
-    const avgPoints = totalSessionsPlayed > 0 ? (totalPoints / totalSessionsPlayed).toFixed(0) : 0;
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md text-center shadow-2xl">
-                <h3 className="text-2xl font-bold mb-6">إحصائيات مطابقة الكلمات</h3>
-                <div className="grid grid-cols-2 gap-4 text-right">
-                    <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجمالي الجلسات</p><p className="text-2xl font-bold text-sky-500">{totalSessionsPlayed}</p></div>
-                    <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجمالي الأخطاء</p><p className="text-2xl font-bold text-red-500">{totalIncorrectAttempts}</p></div>
-                    <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-green-500">{wordMatchSuccessRate}%</p></div>
-                    <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">متوسط النقاط</p><p className="text-2xl font-bold text-yellow-500">{avgPoints}</p></div>
-                </div>
-                <button onClick={onClose} className="mt-6 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 font-semibold py-2 px-6 rounded-lg transition-all">إغلاق</button>
-            </div>
-        </div>
-    );
-};
-
 const AboutModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
@@ -173,7 +76,8 @@ const AboutModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => (
               <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">المطور</h4>
               <p>تم تطوير هذه اللعبة بالكامل بواسطة: <span className="font-bold text-green-500">هشام محسن</span>.</p>
                <p className="mt-4 bg-slate-100 dark:bg-slate-700 p-4 rounded-lg">
-                  <span className="font-semibold text-sky-500">للمشاركة بالتطوير والأفكار، تواصل معنا عبر تليجرام:</span> <a href="https://t.me/C3hem" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">@C3hem</a>
+                  <span className="font-bold">للمشاركة بالتطوير والأفكار</span><br/>
+                  يمكنك التواصل معنا عبر تليجرام لمشاركة أفكارك أو المساهمة في تطوير اللعبة: <a href="https://t.me/C3hem" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">@C3hem</a>
               </p>
             </div>
           </div>
@@ -192,6 +96,10 @@ const MainMenuScreen: React.FC<{ onStartGame: (options: GameOptions) => void; on
             <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">أتقن الإنجليزية كلمة بكلمة</p>
         </div>
         <div className="w-full max-w-lg space-y-4">
+             <button onClick={() => onStartGame({ mode: 'cefr-test'})} className="w-full text-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white font-bold py-6 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 active:scale-[0.98] flex flex-col items-center justify-center gap-2">
+                <BeakerIcon className="w-10 h-10"/>
+                <span>اختبار تحديد المستوى (CEFR)</span>
+             </button>
             <div className="grid grid-cols-2 gap-4">
                 <button onClick={() => onStartGame({ mode: 'listening'})} className="w-full text-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-6 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] flex flex-col items-center justify-center gap-2"><SpeakerWaveIcon className="w-8 h-8"/><span>اختبار الاستماع</span></button>
                 <button onClick={onShowGrammarOptions} className="w-full text-lg bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-bold py-6 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-[0.98] flex flex-col items-center justify-center gap-2"><PuzzlePieceIcon className="w-8 h-8"/><span>اختبار القواعد</span></button>
@@ -203,47 +111,200 @@ const MainMenuScreen: React.FC<{ onStartGame: (options: GameOptions) => void; on
     </div>
 );
 
-const StatsScreen: React.FC<{ onShowDetailsModal: () => void; onShowGrammarDetails: () => void; onShowListeningDetails: () => void; }> = ({ onShowDetailsModal, onShowGrammarDetails, onShowListeningDetails }) => {
-    const { totalPoints, totalMatches, totalIncorrectAttempts, grammarStats, listeningStats } = useStats();
-    const wordMatchSuccessRate = totalMatches > 0 || totalIncorrectAttempts > 0 ? ((totalMatches / (totalMatches + totalIncorrectAttempts)) * 100).toFixed(0) : 100;
-    const { totalCorrect: grammarTotalCorrect, totalIncorrect: grammarTotalIncorrect, totalPoints: grammarTotalPoints } = grammarStats;
-    const grammarSuccessRate = (grammarTotalCorrect + grammarTotalIncorrect > 0) ? ((grammarTotalCorrect / (grammarTotalCorrect + grammarTotalIncorrect)) * 100).toFixed(0) : 0;
-    const { totalCorrect: listeningTotalCorrect, totalIncorrect: listeningTotalIncorrect, totalPoints: listeningTotalPoints } = listeningStats;
-    const listeningSuccessRate = (listeningTotalCorrect + listeningTotalIncorrect > 0) ? ((listeningTotalCorrect / (listeningTotalCorrect + listeningTotalIncorrect)) * 100).toFixed(0) : 0;
+// --- New Stats Screen & Components ---
+
+const QUESTION_TYPE_NAMES: Record<QuestionType, string> = {
+    meaning: "فهم معاني الكلمات",
+    usage: "استخدام الكلمات في جمل",
+    synonym: "المرادفات",
+    antonym: "الأضداد",
+    sentence_formation: "تكوين الجمل",
+    reading_comprehension: "فهم المقروء",
+    matching: "مطابقة الكلمات",
+};
+
+const AdviceModal: React.FC<{ cefrResult: CefrResult | null, onClose: () => void; }> = ({ cefrResult, onClose }) => {
+    const { weaknesses, advice } = useMemo(() => {
+        if (!cefrResult?.levelPerformance) return { weaknesses: [], advice: ["لم يتم إجراء اختبار تحديد المستوى بعد."] };
+
+        const allTypeStats: Record<string, { correct: number, total: number }> = {};
+        Object.values(cefrResult.levelPerformance).forEach(level => {
+            Object.entries(level.typePerformance).forEach(([type, stats]) => {
+                if (!allTypeStats[type]) allTypeStats[type] = { correct: 0, total: 0 };
+                allTypeStats[type].correct += stats.correct;
+                allTypeStats[type].total += stats.total;
+            });
+        });
+
+        const performanceBreakdown = Object.entries(allTypeStats).map(([type, stats]) => ({
+            type: type as QuestionType,
+            successRate: stats.total > 0 ? (stats.correct / stats.total) * 100 : 0,
+        })).sort((a, b) => a.successRate - b.successRate);
+
+        const weakPoints = performanceBreakdown.filter(p => p.successRate < 70);
+        const generatedAdvice: string[] = [];
+
+        if (weakPoints.some(w => ['meaning', 'synonym', 'antonym', 'matching'].includes(w.type))) {
+            generatedAdvice.push("لتقوية مفرداتك، نوصي بلعب وضع 'تحدي المطابقة' و 'تدريب المطابقة'.");
+        }
+        if (weakPoints.some(w => ['usage', 'sentence_formation'].includes(w.type))) {
+            generatedAdvice.push("لتحسين بناء الجمل، نوصيك بلعب 'اختبار القواعد' بانتظام.");
+        }
+        if (weakPoints.some(w => w.type === 'reading_comprehension')) {
+            generatedAdvice.push("لتطوير فهم المقروء، حاول إعادة اختبار تحديد المستوى والتركيز على نصوص القراءة.");
+        }
+        if (generatedAdvice.length === 0) {
+            generatedAdvice.push("أداؤك ممتاز ومتوازن! استمر في الممارسة عبر جميع أوضاع اللعب.");
+        }
+
+        return { weaknesses: weakPoints, advice: generatedAdvice };
+    }, [cefrResult]);
 
     return (
-        <div className="w-full max-w-4xl animate-fade-in-up">
-            <h2 className="text-4xl font-extrabold text-center mb-8 pt-16 bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-violet-500">إحصائياتك</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-lg shadow-2xl">
+                <h3 className="text-2xl font-bold mb-4 text-center">تحليل الأداء والنصائح</h3>
+                {weaknesses.length > 0 && (
+                    <div className="mb-6 text-right">
+                        <h4 className="font-bold text-lg mb-2 text-slate-800 dark:text-slate-200">نقاط تحتاج للتركيز عليها:</h4>
+                        <ul className="space-y-2">
+                            {weaknesses.map(({ type, successRate }) => (
+                                <li key={type} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg flex justify-between items-center">
+                                    <span>{QUESTION_TYPE_NAMES[type]}</span>
+                                    <span className={`font-bold ${successRate < 50 ? 'text-red-500' : 'text-yellow-500'}`}>{successRate.toFixed(0)}% نجاح</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+                <div className="text-right">
+                    <h4 className="font-bold text-lg mb-2 text-sky-600 dark:text-sky-400">توصياتنا لك:</h4>
+                    <ul className="space-y-2 list-disc list-inside">
+                        {advice.map((text, i) => (
+                            <li key={i} className="p-3 bg-sky-50 dark:bg-sky-900/40 rounded-lg">{text}</li>
+                        ))}
+                    </ul>
+                </div>
+                <button onClick={onClose} className="mt-6 w-full bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 font-semibold py-2 px-6 rounded-lg transition-all">إغلاق</button>
+            </div>
+        </div>
+    );
+};
+
+
+const StatsScreen: React.FC<{ onStartGame: (options: GameOptions) => void; }> = ({ onStartGame }) => {
+    const { name, cefrResult } = useUser();
+    const { totalPoints, totalMatches, totalIncorrectAttempts, grammarStats, listeningStats } = useStats();
+    const [showAdviceModal, setShowAdviceModal] = useState(false);
+    const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle');
+
+    const wordMatchSuccessRate = totalMatches > 0 || totalIncorrectAttempts > 0 ? ((totalMatches / (totalMatches + totalIncorrectAttempts)) * 100).toFixed(0) : 0;
+    const grammarSuccessRate = (grammarStats.totalCorrect + grammarStats.totalIncorrect > 0) ? ((grammarStats.totalCorrect / (grammarStats.totalCorrect + grammarStats.totalIncorrect)) * 100).toFixed(0) : 0;
+    const listeningSuccessRate = (listeningStats.totalCorrect + listeningStats.totalIncorrect > 0) ? ((listeningStats.totalCorrect / (listeningStats.totalCorrect + listeningStats.totalIncorrect)) * 100).toFixed(0) : 0;
+    
+    const handleShare = async () => {
+        const summary = `📊 إحصائياتي في WordUp - ${name || 'لاعب'} 🚀
+
+🇬🇧 مستواي: ${cefrResult?.finalLevel || 'لم يحدد بعد'}
+🧠 المفردات المقدرة: ${cefrResult?.estimatedVocab || 'N/A'}
+
+🏆 مطابقة الكلمات:
+- النقاط: ${totalPoints}
+- نسبة النجاح: ${wordMatchSuccessRate}%
+
+🧠 اختبار القواعد:
+- النقاط: ${grammarStats.totalPoints}
+- نسبة النجاح: ${grammarSuccessRate}%
+
+🎧 اختبار الاستماع:
+- النقاط: ${listeningStats.totalPoints}
+- نسبة النجاح: ${listeningSuccessRate}%
+
+انضم إلي في WordUp واختبر مستواك في الإنجليزية!
+https://englishgame1.vercel.app/`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `إحصائيات ${name} في WordUp`,
+                    text: summary,
+                });
+            } catch (error) {
+                console.error('Error sharing:', error);
+            }
+        } else {
+            navigator.clipboard.writeText(summary).then(() => {
+                setShareStatus('copied');
+                setTimeout(() => setShareStatus('idle'), 2000);
+            });
+        }
+    };
+    
+    return (
+        <div className="w-full max-w-4xl animate-fade-in-up pb-16">
+            {showAdviceModal && <AdviceModal cefrResult={cefrResult} onClose={() => setShowAdviceModal(false)} />}
+            
+            <header className="flex justify-between items-center mb-6 pt-16">
+                <h2 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-violet-500">
+                    إحصائيات {name || ''}
+                </h2>
+                <button 
+                    onClick={handleShare}
+                    className="flex items-center gap-2 py-2 px-4 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition active:scale-95 text-sm font-semibold"
+                >
+                    {shareStatus === 'copied' ? <CheckCircleIcon className="w-6 h-6 text-green-500" /> : <ArrowUpOnSquareIcon className="w-6 h-6" />}
+                    <span>{shareStatus === 'copied' ? 'تم النسخ!' : 'مشاركة'}</span>
+                </button>
+            </header>
+
             <div className="space-y-6">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg w-full">
-                    <h3 className="text-xl font-bold mb-4">اختبار الاستماع</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">النقاط</p><p className="text-2xl font-bold text-green-500">{listeningTotalPoints}</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-blue-500">{listeningSuccessRate}%</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات صحيحة</p><p className="text-2xl font-bold text-sky-500">{listeningTotalCorrect}</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات خاطئة</p><p className="text-2xl font-bold text-red-500">{listeningTotalIncorrect}</p></div>
+                {cefrResult ? (
+                     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg w-full text-center">
+                        <h3 className="text-xl font-bold mb-2">مستواك اللغوي (CEFR)</h3>
+                        <p className="text-6xl font-bold my-3 text-green-500">{cefrResult.finalLevel}</p>
+                        <p className="text-lg text-slate-600 dark:text-slate-300">مفرداتك تقدر بـ <span className="font-bold">{cefrResult.estimatedVocab}</span></p>
+                        <button 
+                            onClick={() => setShowAdviceModal(true)}
+                            className="mt-4 text-sm font-semibold text-sky-600 dark:text-sky-400 hover:underline"
+                        >
+                            عرض التفاصيل والنصائح
+                        </button>
                     </div>
-                    <div className="mt-4 text-center"><button onClick={onShowListeningDetails} className="text-sm font-semibold text-sky-600 dark:text-sky-400 hover:underline" disabled={listeningTotalCorrect + listeningTotalIncorrect === 0}>عرض التفاصيل</button></div>
-                </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg w-full">
-                    <h3 className="text-xl font-bold mb-4">مطابقة الكلمات</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">النقاط</p><p className="text-2xl font-bold text-green-500">{totalPoints}</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">مطابقات صحيحة</p><p className="text-2xl font-bold text-blue-500">{totalMatches}</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-sky-500">{wordMatchSuccessRate}%</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">أخطاء</p><p className="text-2xl font-bold text-red-500">{totalIncorrectAttempts}</p></div>
+                ) : (
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg w-full text-center">
+                        <h3 className="text-xl font-bold mb-2">لم تحدد مستواك بعد</h3>
+                        <p className="text-slate-500 dark:text-slate-400 mb-4">قم بإجراء اختبار تحديد المستوى لمعرفة مستواك الحالي والحصول على نصائح مخصصة.</p>
+                        <button 
+                            onClick={() => onStartGame({ mode: 'cefr-test' })}
+                            className="bg-violet-500 hover:bg-violet-600 text-white font-bold py-2 px-6 rounded-lg"
+                        >
+                            ابدأ الاختبار الآن
+                        </button>
                     </div>
-                    <div className="mt-4 text-center"><button onClick={onShowDetailsModal} className="text-sm font-semibold text-sky-600 dark:text-sky-400 hover:underline">عرض التفاصيل</button></div>
-                </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg w-full">
-                    <h3 className="text-xl font-bold mb-4">اختبار القواعد</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">النقاط</p><p className="text-2xl font-bold text-green-500">{grammarTotalPoints}</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-blue-500">{grammarSuccessRate}%</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات صحيحة</p><p className="text-2xl font-bold text-sky-500">{grammarTotalCorrect}</p></div>
-                        <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-500 dark:text-slate-400">إجابات خاطئة</p><p className="text-2xl font-bold text-red-500">{grammarTotalIncorrect}</p></div>
+                )}
+                
+                <div className="grid md:grid-cols-3 gap-6">
+                    <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-lg">
+                        <h3 className="text-xl font-bold mb-4 text-center">مطابقة الكلمات</h3>
+                        <div className="space-y-3">
+                           <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg text-center"><p className="text-sm text-slate-500 dark:text-slate-400">النقاط</p><p className="text-2xl font-bold text-green-500">{totalPoints}</p></div>
+                           <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg text-center"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-sky-500">{wordMatchSuccessRate}%</p></div>
+                        </div>
                     </div>
-                    <div className="mt-4 text-center"><button onClick={onShowGrammarDetails} className="text-sm font-semibold text-sky-600 dark:text-sky-400 hover:underline" disabled={grammarStats.totalCorrect + grammarStats.totalIncorrect === 0}>عرض التفاصيل</button></div>
+                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-lg">
+                        <h3 className="text-xl font-bold mb-4 text-center">اختبار القواعد</h3>
+                        <div className="space-y-3">
+                           <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg text-center"><p className="text-sm text-slate-500 dark:text-slate-400">النقاط</p><p className="text-2xl font-bold text-green-500">{grammarStats.totalPoints}</p></div>
+                           <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg text-center"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-sky-500">{grammarSuccessRate}%</p></div>
+                        </div>
+                    </div>
+                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-lg">
+                        <h3 className="text-xl font-bold mb-4 text-center">اختبار الاستماع</h3>
+                        <div className="space-y-3">
+                           <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg text-center"><p className="text-sm text-slate-500 dark:text-slate-400">النقاط</p><p className="text-2xl font-bold text-green-500">{listeningStats.totalPoints}</p></div>
+                           <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg text-center"><p className="text-sm text-slate-500 dark:text-slate-400">نسبة النجاح</p><p className="text-2xl font-bold text-sky-500">{listeningSuccessRate}%</p></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -256,7 +317,7 @@ const BottomNavBar: React.FC<{ activeTab: 'home' | 'stats'; onTabChange: (tab: '
     const inactiveClasses = "text-slate-500 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400";
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 shadow-t-lg flex justify-around items-center z-40">
+        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center z-40">
             <button onClick={() => onTabChange('home')} className={`${navButtonClasses} ${activeTab === 'home' ? activeClasses : inactiveClasses}`}>
                 {activeTab === 'home' ? <HomeIconSolid className="w-7 h-7" /> : <HomeIconOutline className="w-7 h-7" />}
                 <span className="text-xs font-semibold">الرئيسية</span>
@@ -279,13 +340,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartGame }) => {
     const { theme, toggleTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<'home' | 'stats'>('home');
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showGrammarOptions, setShowGrammarOptions] = useState(false);
-    const [showGrammarDetails, setShowGrammarDetails] = useState(false);
-    const [showListeningDetails, setShowListeningDetails] = useState(false);
     const [showAboutModal, setShowAboutModal] = useState(false);
     const [aboutButtonText, setAboutButtonText] = useState('من نحن');
-    const aboutTexts = useMemo(() => ['من نحن', 'عن التطبيق', 'ادعمنا!'], []);
+    const aboutTexts = useMemo(() => ['من نحن', 'عن التطبيق', 'شاركنا رأيك!'], []);
 
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -306,10 +364,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartGame }) => {
     return (
         <div className="flex flex-col items-center h-full pb-20">
             {showCategoryPicker && <CategoryPicker onChoice={handleCategoryChoice} onClose={() => setShowCategoryPicker(false)} />}
-            {showDetailsModal && <DetailsModal onClose={() => setShowDetailsModal(false)} />}
             {showGrammarOptions && <GrammarOptionsModal onStartGame={onStartGame} onClose={() => setShowGrammarOptions(false)} />}
-            {showGrammarDetails && <GrammarStatsDetailsModal onClose={() => setShowGrammarDetails(false)} />}
-            {showListeningDetails && <ListeningStatsDetailsModal onClose={() => setShowListeningDetails(false)} />}
             {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} />}
 
             <header className="absolute top-4 w-full px-4 flex justify-between items-center z-10">
@@ -326,7 +381,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartGame }) => {
 
             {activeTab === 'home'
                 ? <MainMenuScreen onStartGame={onStartGame} onShowCategoryPicker={() => setShowCategoryPicker(true)} onShowGrammarOptions={() => setShowGrammarOptions(true)} />
-                : <StatsScreen onShowDetailsModal={() => setShowDetailsModal(true)} onShowGrammarDetails={() => setShowGrammarDetails(true)} onShowListeningDetails={() => setShowListeningDetails(true)} />
+                : <StatsScreen onStartGame={onStartGame} />
             }
 
             <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />

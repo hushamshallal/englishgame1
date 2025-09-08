@@ -1,5 +1,8 @@
+// FIX: Removed a circular import. This file was importing a type from itself,
+// causing a conflict with the type declaration below.
+
 export type Difficulty = 'easy' | 'medium' | 'hard';
-export type GameMode = 'time' | 'training' | 'category' | 'grammar' | 'listening';
+export type GameMode = 'time' | 'training' | 'category' | 'grammar' | 'listening' | 'cefr-test';
 
 export const CATEGORIES = [
     'colors', 
@@ -68,6 +71,7 @@ export interface SessionStats {
     win?: boolean;
     grammarLevel?: number;
     listeningLevel?: number;
+    cefrResult?: CefrResult;
 }
 
 export interface GrammarQuestion {
@@ -97,4 +101,58 @@ export interface ListeningStats {
   totalPoints: number;
   totalCorrect: number;
   totalIncorrect: number;
+}
+
+// CEFR Test Types
+export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+export const CEFR_LEVELS_ORDER: CefrLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+export interface CefrWord {
+  word: string;
+  ar: string;
+  pos: 'noun' | 'verb' | 'adjective' | 'adverb' | 'phrase';
+  example: {
+    sentence: string;
+    ar: string;
+  };
+  synonyms?: string[];
+  antonyms?: string[];
+}
+
+export type QuestionType = 'meaning' | 'usage' | 'synonym' | 'antonym' | 'sentence_formation' | 'reading_comprehension' | 'matching';
+
+// FIX: Added missing CefrQuestion interface.
+export interface CefrQuestion {
+  questionType: QuestionType;
+  questionText: string;
+  options: string[];
+  correctAnswer: string;
+}
+
+export interface CefrResult {
+    finalLevel: CefrLevel | 'Beginner';
+    failedLevel?: CefrLevel;
+    estimatedVocab: string;
+    strengths: string[];
+    weaknesses: string[];
+    advice: string[];
+    levelPerformance: Record<string, { 
+        score: number, 
+        total: number,
+        typePerformance: Partial<Record<QuestionType, { correct: number, total: number }>>
+    }>;
+}
+
+// New data structures for CEFR question banks
+export interface SentenceFormationData {
+  jumbled: string[]; // e.g., ['is', 'my', 'This', 'brother']
+  correct: string; // e.g., 'This is my brother.'
+  distractors: string[]; // e.g., ['My is This brother.', 'Brother my is This.']
+}
+
+export interface ReadingComprehensionData {
+    passage: string;
+    question: string;
+    options: string[]; // should include correct answer
+    correctAnswer: string;
 }

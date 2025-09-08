@@ -1,12 +1,13 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GameOptions, Difficulty, WordItem, Category, SessionStats } from '../types';
 import { WORDS_DATA } from '../data/words';
 import { ROUND_REQUIREMENTS, POINTS, MISTAKE_PENALTY, TIME_CHALLENGE_SECONDS, TIME_BONUS_CORRECT, TIME_PENALTY_INCORRECT, TOTAL_ROUNDS_PER_LEVEL, STREAK_BONUS_THRESHOLD, STREAK_BONUS_POINTS } from '../constants';
 import { useStats } from '../context/StatsContext';
 import Timer from '../components/Timer';
 import StatsDisplay from '../components/StatsDisplay';
-import { StarIcon } from '@heroicons/react/24/solid';
+import { StarIcon, ClockIcon, AcademicCapIcon, QueueListIcon } from '@heroicons/react/24/solid';
+import InstructionsModal from '../components/InstructionsModal';
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   return [...array].sort(() => Math.random() - 0.5);
@@ -141,6 +142,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ options, onGameEnd, onExit }) =
   const { mode, difficulty: initialDifficulty = 'easy', category } = options;
   const { addSessionStats } = useStats();
 
+  const [showInstructions, setShowInstructions] = useState(true);
   const [sessionWordPool, setSessionWordPool] = useState<WordItem[]>([]);
   const [activeWords, setActiveWords] = useState<WordItem[]>([]);
   
@@ -198,8 +200,9 @@ const GameScreen: React.FC<GameScreenProps> = ({ options, onGameEnd, onExit }) =
   }, [mode, level, category]);
 
   useEffect(() => {
+    if (showInstructions) return;
     setupNewRound(true);
-  }, [level, setupNewRound]);
+  }, [level, setupNewRound, showInstructions]);
 
   useEffect(() => {
     setEnColumn(activeWords.map(word => toColumnItem(word, 'en')));
@@ -208,7 +211,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ options, onGameEnd, onExit }) =
 
 
   useEffect(() => {
-    if (mode !== 'time' || isLevelTransition) return;
+    if (mode !== 'time' || isLevelTransition || showInstructions) return;
     if (timeLeft <= 0) {
         addSessionStats(score, totalMatches, incorrectAttempts);
         onGameEnd({ mode, score, matches: totalMatches, incorrectAttempts, level, round });
@@ -216,7 +219,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ options, onGameEnd, onExit }) =
     }
     const timerId = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(timerId);
-  }, [mode, timeLeft, onGameEnd, score, totalMatches, incorrectAttempts, level, round, addSessionStats, isLevelTransition]);
+  }, [mode, timeLeft, onGameEnd, score, totalMatches, incorrectAttempts, level, round, addSessionStats, isLevelTransition, showInstructions]);
 
   useEffect(() => {
     if (mode !== 'time' || matchesThisRound < ROUND_REQUIREMENTS[level]) return;
@@ -346,6 +349,50 @@ const GameScreen: React.FC<GameScreenProps> = ({ options, onGameEnd, onExit }) =
     }
   };
   
+  const instructions = useMemo(() => {
+    switch(mode) {
+        case 'time':
+            return [
+                'طابق الكلمة الإنجليزية بمعناها العربي الصحيح.',
+                'لديك 90 ثانية. كل إجابة صحيحة تزيد الوقت، والخاطئة تنقصه.',
+                'حاول مطابقة أكبر عدد ممكن من الكلمات للانتقال بين المستويات (سهل، متوسط، صعب).',
+                'حقق سلسلة من المطابقات الصحيحة للحصول على نقاط إضافية!'
+            ];
+        case 'category':
+            return [
+                'طابق الكلمة الإنجليزية بمعناها العربي الصحيح ضمن الفئة التي اخترتها.',
+                'لا يوجد مؤقت أو حيوات، يمكنك اللعب بالسرعة التي تناسبك.',
+                'هذا الوضع مثالي لتعلم كلمات جديدة في مجال معين.',
+            ];
+        case 'training':
+        default:
+             return [
+                'طابق الكلمة الإنجليزية بمعناها العربي الصحيح.',
+                'هذا وضع تدريب مفتوح بدون ضغط الوقت أو الخسارة.',
+                'خذ وقتك لتعلم الكلمات الجديدة وتذكرها.',
+            ];
+    }
+  }, [mode]);
+
+  const modalInfo = useMemo(() => {
+      switch(mode) {
+          case 'time': return { title: 'تعليمات: تحدي المطابقة', icon: <ClockIcon className="w-10 h-10 text-sky-500" /> };
+          case 'category': return { title: `تعليمات: فئة ${category ? getCategoryName(category) : ''}`, icon: <QueueListIcon className="w-10 h-10 text-sky-500" /> };
+          default: return { title: 'تعليمات: تدريب المطابقة', icon: <AcademicCapIcon className="w-10 h-10 text-sky-500" /> };
+      }
+  }, [mode, category]);
+
+  if (showInstructions) {
+      return (
+          <InstructionsModal
+              title={modalInfo.title}
+              instructions={instructions}
+              onStart={() => setShowInstructions(false)}
+              gameIcon={modalInfo.icon}
+          />
+      );
+  }
+
   if (isLevelTransition && nextLevel) {
     const fromLevelText = difficultyMap[level];
     const toLevelText = difficultyMap[nextLevel];

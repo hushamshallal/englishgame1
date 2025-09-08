@@ -3,8 +3,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GameOptions, GrammarQuestion, SessionStats } from '../types';
 import { useStats } from '../context/StatsContext';
 import { GRAMMAR_POINTS_CORRECT, GRAMMAR_POINTS_INCORRECT, GRAMMAR_TIMER_SECONDS, GRAMMAR_INITIAL_LIVES, GRAMMAR_LEVEL_UP_THRESHOLD } from '../constants';
-import { HeartIcon, ClockIcon, SparklesIcon, StarIcon } from '@heroicons/react/24/solid';
+import { HeartIcon, ClockIcon, SparklesIcon, StarIcon, PuzzlePieceIcon } from '@heroicons/react/24/solid';
 import { GRAMMAR_QUESTIONS } from '../data/grammar';
+import InstructionsModal from '../components/InstructionsModal';
 
 const shuffleArray = <T,>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
@@ -49,6 +50,7 @@ const GrammarGameScreen: React.FC<GrammarGameScreenProps> = ({ options, onGameEn
     const { addGrammarSessionStats } = useStats();
     const { subMode } = options;
 
+    const [showInstructions, setShowInstructions] = useState(true);
     const [questionPool, setQuestionPool] = useState<Record<number, GrammarQuestion[]>>({});
     const [questionIndices, setQuestionIndices] = useState<Record<number, number>>({});
     const [isLevelTransitioning, setIsLevelTransitioning] = useState(false);
@@ -89,7 +91,7 @@ const GrammarGameScreen: React.FC<GrammarGameScreenProps> = ({ options, onGameEn
     }, [questionPool, level, currentQuestionIndex]);
 
     useEffect(() => {
-        if (subMode !== 'timed' || isAnswered || isLevelTransitioning || !question) return;
+        if (subMode !== 'timed' || isAnswered || isLevelTransitioning || !question || showInstructions) return;
 
         if (timeLeft <= 0) {
             handleAnswer(""); // Time's up, counts as incorrect
@@ -97,7 +99,7 @@ const GrammarGameScreen: React.FC<GrammarGameScreenProps> = ({ options, onGameEn
         }
         const timerId = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
         return () => clearInterval(timerId);
-    }, [subMode, timeLeft, isAnswered, question, isLevelTransitioning]);
+    }, [subMode, timeLeft, isAnswered, question, isLevelTransitioning, showInstructions]);
 
     const endGame = useCallback(() => {
         addGrammarSessionStats({
@@ -170,6 +172,34 @@ const GrammarGameScreen: React.FC<GrammarGameScreenProps> = ({ options, onGameEn
             }
         }
     };
+
+    const instructions = useMemo(() => {
+        if (subMode === 'timed') {
+            return [
+                'اقرأ الجملة واختر الكلمة الصحيحة لإكمال الفراغ.',
+                'لديك 15 ثانية للإجابة على كل سؤال.',
+                'أجب على 5 أسئلة صحيحة للارتقاء إلى المستوى التالي.',
+                'حاول الوصول إلى أعلى مستوى ممكن قبل انتهاء الوقت!'
+            ];
+        }
+        return [
+            'اقرأ الجملة واختر الكلمة الصحيحة لإكمال الفراغ.',
+            'لديك 3 حيوات (قلوب). كل إجابة خاطئة تفقدك حياة واحدة.',
+            'أجب على 5 أسئلة صحيحة للارتقاء إلى المستوى التالي.',
+            'تنتهي اللعبة عند فقدان كل الحيوات. حظاً موفقاً!'
+        ];
+    }, [subMode]);
+
+    if (showInstructions) {
+        return (
+            <InstructionsModal
+                title="تعليمات اختبار القواعد"
+                instructions={instructions}
+                onStart={() => setShowInstructions(false)}
+                gameIcon={<PuzzlePieceIcon className="w-10 h-10 text-sky-500" />}
+            />
+        );
+    }
 
     const renderHeader = () => (
         <div className="grid grid-cols-3 items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md mb-6">
